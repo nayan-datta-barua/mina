@@ -26,16 +26,21 @@ class RegisterAPIView(APIView):
 
 
 class LoginAPIView(APIView):
+
     def post(self, request):
         username_or_email = request.data.get('username_or_email')
         password = request.data.get('password')
+
+        # Validate the input
+        if not username_or_email or not password:
+            return Response({"error": "Both username/email and password are required."}, status=HTTP_400_BAD_REQUEST)
 
         user = None
         if '@' in username_or_email:
             try:
                 user = User.objects.get(email=username_or_email)
             except User.DoesNotExist:
-                pass
+                return Response({"error": "Invalid email or password."}, status=HTTP_400_BAD_REQUEST)
         else:
             user = authenticate(username=username_or_email, password=password)
 
@@ -46,7 +51,31 @@ class LoginAPIView(APIView):
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             }, status=HTTP_200_OK)
+
         return Response({"error": "Invalid credentials."}, status=HTTP_400_BAD_REQUEST)
+
+# class LoginAPIView(APIView):
+#     def post(self, request):
+#         username_or_email = request.data.get('username_or_email')
+#         password = request.data.get('password')
+
+#         user = None
+#         if '@' in username_or_email:
+#             try:
+#                 user = User.objects.get(email=username_or_email)
+#             except User.DoesNotExist:
+#                 pass
+#         else:
+#             user = authenticate(username=username_or_email, password=password)
+
+#         if user and user.check_password(password):
+#             from rest_framework_simplejwt.tokens import RefreshToken
+#             refresh = RefreshToken.for_user(user)
+#             return Response({
+#                 "refresh": str(refresh),
+#                 "access": str(refresh.access_token),
+#             }, status=HTTP_200_OK)
+#         return Response({"error": "Invalid credentials."}, status=HTTP_400_BAD_REQUEST)
 
 
 class ProfileAPIView(APIView):
