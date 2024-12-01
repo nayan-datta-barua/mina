@@ -78,6 +78,30 @@ class LoginAPIView(APIView):
 #         return Response({"error": "Invalid credentials."}, status=HTTP_400_BAD_REQUEST)
 
 
+
+# from .serializers import ProfileSerializer, UserSerializer
+
+
+class UserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        # Check if the user has a profile
+        try:
+            profile = user.profile  # Access the related profile
+            profile_data = ProfileSerializer(profile).data
+        except Profile.DoesNotExist:
+            profile_data = None
+
+        # Include username and email in the response
+        data = {
+            "username": user.username,
+            "email": user.email,
+            "profile": profile_data,  # Include profile data only if it exists
+        }
+        return Response(data, status=HTTP_200_OK)
+
 class ProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
